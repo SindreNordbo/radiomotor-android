@@ -9,12 +9,28 @@
     <packaging>apk</packaging>
     <name>Radiomotor</name>
 
+    <properties>
+        <androidannotations.version>2.7.1</androidannotations.version>
+        <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.google.android</groupId>
             <artifactId>android</artifactId>
             <version>4.1.1.4</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.androidannotations</groupId>
+            <artifactId>androidannotations</artifactId>
+            <version>${androidannotations.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.androidannotations</groupId>
+            <artifactId>androidannotations-api</artifactId>
+            <version>${androidannotations.version}</version>
         </dependency>
     </dependencies>
 
@@ -39,6 +55,14 @@
                         <platform>14</platform>
                     </sdk>
                     <undeployBeforeDeploy>true</undeployBeforeDeploy>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
                 </configuration>
             </plugin>
         </plugins>
