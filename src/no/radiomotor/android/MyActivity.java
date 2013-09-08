@@ -1,6 +1,10 @@
 package no.radiomotor.android;
 
 import android.app.Activity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.*;
 import com.googlecode.androidannotations.annotations.*;
 import android.content.Intent;
@@ -26,11 +30,14 @@ import java.io.File;
 public class MyActivity extends Activity {
 
 	@ViewById ListView newsFeedList;
+	@ViewById TextView noNewsTextView;
 
 	private final int PICTURE_REQUEST_CODE = 1;
 	private final String IMAGE_PATH = Environment.getExternalStorageDirectory()+File.separator + "radiomotor.jpg";
 
 	private CacheHelper cacheHelper;
+
+	MenuItem refresh;
 
 	@AfterViews
 	void getRss() {
@@ -52,6 +59,18 @@ public class MyActivity extends Activity {
     @OptionsItem(R.id.action_play)
     public void radioPlayerSelected() {
     }
+
+	@OptionsItem(R.id.action_refresh)
+	public void newsRefreshSelected() {
+		refresh.setActionView(R.layout.actionbar_indeterminate_progress);
+		downloadNewsfeed("http://www.radiomotor.no/feed/");
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(final Menu menu) {
+		refresh = menu.findItem(R.id.action_refresh);
+		return true;
+	}
 
     @OnActivityResult(PICTURE_REQUEST_CODE)
     void onResult(int resultCode, Intent data) {
@@ -77,9 +96,9 @@ public class MyActivity extends Activity {
 			entries = parser.parse(stream);
 			cacheHelper.writeNewsItems(entries);
 		} catch (XmlPullParserException e) {
-			e.printStackTrace(); // TODO
+			errorMessage(R.string.parse_error);
 		} catch (IOException e) {
-			e.printStackTrace(); // TODO
+			errorMessage(R.string.connection_error);
 		} finally {
 			if (stream != null) {
 				try {
@@ -92,14 +111,28 @@ public class MyActivity extends Activity {
 
 	@UiThread
 	void updateListview() {
+		if (refresh != null) {
+			refresh.setActionView(null);
+		}
 		ArrayList<Item> items = new ArrayList<Item>();
 		try {
 			items = cacheHelper.readNewsItems();
 		} catch (IOException e) {
-			e.printStackTrace(); // TODO
+			Log.e("SBN", e.getLocalizedMessage(), e);
 		}
 
-		newsFeedList.setAdapter(new NewsFeedAdapter(getApplicationContext(), R.layout.row_newsitem, items));
+		if (items.size() > 0) {
+			noNewsTextView.setVisibility(View.GONE);
+			newsFeedList.setAdapter(new NewsFeedAdapter(getApplicationContext(), R.layout.row_newsitem, items));
+		} else {
+			newsFeedList.setVisibility(View.GONE);
+			noNewsTextView.setVisibility(View.VISIBLE);
+		}
+	}
+
+	@UiThread
+	void errorMessage(int resourceId) {
+		Toast.makeText(getApplicationContext(), resourceId, Toast.LENGTH_LONG).show();
 	}
 
 	@ItemClick

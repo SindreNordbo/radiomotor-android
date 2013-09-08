@@ -10,10 +10,18 @@
             android:layout_width="fill_parent"
             android:layout_height="match_parent"
             />
-    <TextView android:id="@android:id/empty"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:text="No data"/>
+
+    <TextView
+            android:id="@+id/noNewsTextView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@string/error_retrieving_news"
+            android:visibility="gone"
+            android:padding="10dp"
+            android:gravity="center"
+            android:background="#FFFAFAFA"
+            android:textColor="#FF000000"/>
+
     <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"

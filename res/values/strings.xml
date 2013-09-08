@@ -4,4 +4,8 @@
     <string name="action_play">Hør på radio</string>
     <string name="action_picture">Ta bilde</string>
     <string name="action_open_browser">Åpne i nettleser</string>
+    <string name="action_refresh">Oppdater nyheter</string>
+    <string name="connection_error">Feil! Klarte ikke å koble til Internett.</string>
+    <string name="parse_error">Feil ved innlesing av nyheter.</string>
+    <string name="error_retrieving_news">Klarte ikke å hente nyheter</string>
 </resources>
