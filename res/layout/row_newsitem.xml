@@ -8,6 +8,5 @@
         android:layout_height="wrap_content"
         android:padding="10dp"
         android:id="@+id/itemTitle"
-        android:background="#FFFAFAFA"
-        android:textColor="#FF000000"/>
+        android:textColor="@android:color/black"/>
 </LinearLayout>

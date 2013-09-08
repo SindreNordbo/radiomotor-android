@@ -3,12 +3,15 @@
               android:orientation="vertical"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
-              android:background="#FF414143"
+              android:background="@color/background_dark"
         >
     <ListView
             android:id="@+id/newsFeedList"
             android:layout_width="fill_parent"
             android:layout_height="match_parent"
+            android:drawSelectorOnTop="false"
+            android:background="@color/background_light"
+            android:listSelector="@drawable/listview_background"
             />
 
     <TextView
@@ -19,8 +22,8 @@
             android:visibility="gone"
             android:padding="10dp"
             android:gravity="center"
-            android:background="#FFFAFAFA"
-            android:textColor="#FF000000"/>
+            android:background="@color/background_light"
+            android:textColor="@android:color/black"/>
 
     <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/fragment_container"
