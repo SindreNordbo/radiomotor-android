@@ -8,13 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 public class RadiomotorXmlParser {
 
 	private String ns = null;
 
-	public List<Item> parse(InputStream stream) throws XmlPullParserException, IOException {
+	public ArrayList<Item> parse(InputStream stream) throws XmlPullParserException, IOException {
 		XmlPullParser parser = Xml.newPullParser();
 		try {
 			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -26,8 +25,8 @@ public class RadiomotorXmlParser {
 		}
 	}
 
-	private List<Item> readRss(XmlPullParser parser) throws IOException, XmlPullParserException {
-		List<Item> entries = new ArrayList<Item>();
+	private ArrayList<Item> readRss(XmlPullParser parser) throws IOException, XmlPullParserException {
+		ArrayList<Item> entries = new ArrayList<Item>();
 
 		parser.require(XmlPullParser.START_TAG, ns, "rss");
 		while (parser.next() != XmlPullParser.END_TAG) {

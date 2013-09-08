@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
+import java.util.ArrayList;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static no.radiomotor.android.RadiomotorXmlParser.Item;
@@ -30,8 +30,12 @@ public class MyActivity extends Activity {
 	private final int PICTURE_REQUEST_CODE = 1;
 	private final String IMAGE_PATH = Environment.getExternalStorageDirectory()+File.separator + "radiomotor.jpg";
 
+	private CacheHelper cacheHelper;
+
 	@AfterViews
 	void getRss() {
+		cacheHelper = new CacheHelper(getApplicationContext());
+		updateListview();
 		downloadNewsfeed("http://www.radiomotor.no/feed/");
 	}
 
@@ -67,10 +71,11 @@ public class MyActivity extends Activity {
 	void downloadNewsfeed(String urlString) {
 		InputStream stream = null;
 		RadiomotorXmlParser parser = new RadiomotorXmlParser();
-		List<Item> entries = null;
+		ArrayList<Item> entries;
 		try {
 			stream = downloadUrl(urlString);
 			entries = parser.parse(stream);
+			cacheHelper.writeNewsItems(entries);
 		} catch (XmlPullParserException e) {
 			e.printStackTrace(); // TODO
 		} catch (IOException e) {
@@ -82,11 +87,18 @@ public class MyActivity extends Activity {
 				} catch (IOException e) {}
 			}
 		}
-		updateListview(entries);
+		updateListview();
 	}
 
 	@UiThread
-	void updateListview(List<Item> items) {
+	void updateListview() {
+		ArrayList<Item> items = new ArrayList<Item>();
+		try {
+			items = cacheHelper.readNewsItems();
+		} catch (IOException e) {
+			e.printStackTrace(); // TODO
+		}
+
 		newsFeedList.setAdapter(new NewsFeedAdapter(getApplicationContext(), R.layout.row_newsitem, items));
 	}
 
