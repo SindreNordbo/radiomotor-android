@@ -6,7 +6,7 @@
               android:background="#FF414143"
         >
     <ListView
-            android:id="@android:id/list"
+            android:id="@+id/newsFeedList"
             android:layout_width="fill_parent"
             android:layout_height="match_parent"
             />

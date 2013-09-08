@@ -1,18 +1,12 @@
 package no.radiomotor.android;
 
-import android.app.ListActivity;
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
+import android.app.Activity;
+import android.widget.*;
 import com.googlecode.androidannotations.annotations.*;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.widget.ImageView;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -22,13 +16,16 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static no.radiomotor.android.RadiomotorXmlParser.Item;
 
 import java.io.File;
 
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main)
-public class MyActivity extends ListActivity {
+public class MyActivity extends Activity {
+
+	@ViewById ListView newsFeedList;
 
 	private final int PICTURE_REQUEST_CODE = 1;
 	private final String IMAGE_PATH = Environment.getExternalStorageDirectory()+File.separator + "radiomotor.jpg";
@@ -90,7 +87,12 @@ public class MyActivity extends ListActivity {
 
 	@UiThread
 	void updateListview(List<Item> items) {
-		getListView().setAdapter(new NewsFeedAdapter(getApplicationContext(), R.layout.row_newsitem, items));
+		newsFeedList.setAdapter(new NewsFeedAdapter(getApplicationContext(), R.layout.row_newsitem, items));
+	}
+
+	@ItemClick
+	void newsFeedListItemClicked(Item item) {
+		NewsItemActivity_.intent(getApplicationContext()).flags(FLAG_ACTIVITY_NEW_TASK).newsItem(item).start();
 	}
 
 	private InputStream downloadUrl(String urlString) throws IOException {
@@ -105,29 +107,4 @@ public class MyActivity extends ListActivity {
 		return conn.getInputStream();
 	}
 
-	public class NewsFeedAdapter extends ArrayAdapter {
-
-		private final int resource;
-		private final LayoutInflater inflater;
-		private final Context context;
-
-		public NewsFeedAdapter(final Context ctx, final int resourceId, final List<Item> objects) {
-			super(ctx, resourceId, objects);
-			resource = resourceId;
-			inflater = LayoutInflater.from(ctx);
-			context = ctx;
-		}
-
-		@Override
-		public View getView(final int position, View convertView, final ViewGroup parent) {
-			convertView = inflater.inflate(resource, null);
-
-			Item item = (Item) getItem(position);
-
-			TextView itemTitle = (TextView) convertView.findViewById(R.id.itemTitle);
-			itemTitle.setText(item.title);
-
-			return convertView;
-		}
-	}
 }

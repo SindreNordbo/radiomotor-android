@@ -6,6 +6,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +50,7 @@ public class RadiomotorXmlParser {
 		return entries;
 	}
 
-	public static class Item {
+	public static class Item implements Serializable {
 		public String title;
 		public String link;
 		public String content;
