@@ -2,24 +2,18 @@ package no.radiomotor.android;
 
 import android.app.ListActivity;
 import android.content.Context;
-import android.os.AsyncTask;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
-import com.googlecode.androidannotations.annotations.AfterViews;
+import com.googlecode.androidannotations.annotations.*;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.widget.ImageView;
 
-import com.googlecode.androidannotations.annotations.EActivity;
-import com.googlecode.androidannotations.annotations.OnActivityResult;
-import com.googlecode.androidannotations.annotations.OptionsItem;
-import com.googlecode.androidannotations.annotations.OptionsMenu;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -41,7 +35,7 @@ public class MyActivity extends ListActivity {
 
 	@AfterViews
 	void getRss() {
-		new DownloadXmlTask().execute("http://www.radiomotor.no/feed/");
+		downloadNewsfeed("http://www.radiomotor.no/feed/");
 	}
 
     @OptionsItem(R.id.action_picture)
@@ -72,41 +66,31 @@ public class MyActivity extends ListActivity {
         }
     }
 
-	private class DownloadXmlTask extends AsyncTask<String, Void, List<Item>> {
-		@Override
-		protected List<Item> doInBackground(String... urls) {
-			try {
-				return loadXmlFromNetwork(urls[0]);
-			} catch (IOException e) {
-				Log.e(getClass().getSimpleName(), e.getLocalizedMessage(), e);
-				return null; // TODO
-			} catch (XmlPullParserException e) {
-				Log.e(getClass().getSimpleName(), e.getLocalizedMessage(), e);
-				return null; // TODO
-			}
-		}
-
-		@Override
-		protected void onPostExecute(List<Item> result) {
-			Log.d(getClass().getSimpleName(), result.toString());
-			getListView().setAdapter(new NewsFeedAdapter(getApplicationContext(), R.layout.row_newsitem, result));
-		}
-	}
-
-	private List<Item> loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
+	@Background
+	void downloadNewsfeed(String urlString) {
 		InputStream stream = null;
-		RadiomotorXmlParser stackOverflowXmlParser = new RadiomotorXmlParser();
+		RadiomotorXmlParser parser = new RadiomotorXmlParser();
 		List<Item> entries = null;
 		try {
 			stream = downloadUrl(urlString);
-			entries = stackOverflowXmlParser.parse(stream);
+			entries = parser.parse(stream);
+		} catch (XmlPullParserException e) {
+			e.printStackTrace(); // TODO
+		} catch (IOException e) {
+			e.printStackTrace(); // TODO
 		} finally {
 			if (stream != null) {
-				stream.close();
+				try {
+					stream.close();
+				} catch (IOException e) {}
 			}
 		}
+		updateListview(entries);
+	}
 
-		return entries;
+	@UiThread
+	void updateListview(List<Item> items) {
+		getListView().setAdapter(new NewsFeedAdapter(getApplicationContext(), R.layout.row_newsitem, items));
 	}
 
 	private InputStream downloadUrl(String urlString) throws IOException {
