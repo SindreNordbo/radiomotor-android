@@ -3,4 +3,5 @@
     <string name="app_name">Radiomotor</string>
     <string name="action_play">Hør på radio</string>
     <string name="action_picture">Ta bilde</string>
+    <string name="action_open_browser">Åpne i nettleser</string>
 </resources>
