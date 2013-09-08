@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Radiomotor</string>
+    <string name="action_play">Hør på radio</string>
+    <string name="action_picture">Ta bilde</string>
 </resources>
