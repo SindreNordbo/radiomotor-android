@@ -9,4 +9,5 @@
     <string name="parse_error">Feil ved innlesing av nyheter.</string>
     <string name="error_retrieving_news">Klarte ikke å hente nyheter</string>
     <string name="playback_error">Feil under avspilling. Vennligst prøv igjen senere.</string>
+    <string name="notification_playing">Spiller av radio</string>
 </resources>
