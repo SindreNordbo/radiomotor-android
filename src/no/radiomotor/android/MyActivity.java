@@ -1,6 +1,11 @@
 package no.radiomotor.android;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.media.AudioManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,6 +26,8 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static android.widget.Toast.LENGTH_LONG;
+import static no.radiomotor.android.RadioService.*;
 import static no.radiomotor.android.RadiomotorXmlParser.Item;
 
 import java.io.File;
@@ -36,14 +43,23 @@ public class MyActivity extends Activity {
 	private final String IMAGE_PATH = Environment.getExternalStorageDirectory()+File.separator + "radiomotor.jpg";
 
 	private CacheHelper cacheHelper;
+	private boolean podcastPlaying;
 
 	MenuItem refresh;
+	MenuItem podcastControl;
 
 	@AfterViews
 	void getRss() {
+		podcastPlaying = false;
 		cacheHelper = new CacheHelper(getApplicationContext());
 		updateListview();
 		downloadNewsfeed("http://www.radiomotor.no/feed/");
+
+		LocalBroadcastManager bManager = LocalBroadcastManager.getInstance(this);
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(ACTION_STARTED);
+		intentFilter.addAction(ACTION_STOPPED);
+		bManager.registerReceiver(broadcastReceiver, intentFilter);
 	}
 
     @OptionsItem(R.id.action_picture)
@@ -58,6 +74,10 @@ public class MyActivity extends Activity {
 
     @OptionsItem(R.id.action_play)
     public void radioPlayerSelected() {
+		Intent i = new Intent(getApplicationContext(), RadioService.class);
+		i.setAction(podcastPlaying ? ACTION_STOP : ACTION_PLAY);
+		setVolumeControlStream(AudioManager.STREAM_MUSIC);
+		startService(i);
     }
 
 	@OptionsItem(R.id.action_refresh)
@@ -69,8 +89,26 @@ public class MyActivity extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(final Menu menu) {
 		refresh = menu.findItem(R.id.action_refresh);
+		podcastControl = menu.findItem(R.id.action_play);
 		return true;
 	}
+
+	private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals(RadioService.ACTION_STARTED)) {
+				podcastControl.setIcon(R.drawable.ic_action_av_stop);
+				podcastPlaying = true;
+			} else if (intent.getAction().equals(ACTION_STOPPED)) {
+				podcastControl.setIcon(R.drawable.ic_action_av_play);
+				podcastPlaying = false;
+			} else if (intent.getAction().equals(ACTION_STOPPED_ERROR)) {
+				Toast.makeText(getApplicationContext(), getString(R.string.playback_error), LENGTH_LONG).show();
+				podcastControl.setIcon(R.drawable.ic_action_av_play);
+				podcastPlaying = false;
+			}
+		}
+	};
 
     @OnActivityResult(PICTURE_REQUEST_CODE)
     void onResult(int resultCode, Intent data) {
@@ -132,7 +170,7 @@ public class MyActivity extends Activity {
 
 	@UiThread
 	void errorMessage(int resourceId) {
-		Toast.makeText(getApplicationContext(), resourceId, Toast.LENGTH_LONG).show();
+		Toast.makeText(getApplicationContext(), resourceId, LENGTH_LONG).show();
 	}
 
 	@ItemClick
