@@ -39,15 +39,20 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 	}
 
 	@Override
+	public void onCreate() {
+		super.onCreate();
+		am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+		mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		wifiLock = ((WifiManager) getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL, WIFI_LOCK);
+		mediaPlayer = new MediaPlayer();
+	}
+
+	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if (intent != null) {
-			mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			if (intent.getAction().equals(ACTION_PLAY)) {
-				am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 				int result = am.requestAudioFocus(this, STREAM_MUSIC, AUDIOFOCUS_GAIN);
-
 				if (result == AUDIOFOCUS_REQUEST_GRANTED) {
-					mediaPlayer = new MediaPlayer();
 					mediaPlayer.setWakeMode(getApplicationContext(), PARTIAL_WAKE_LOCK);
 					mediaPlayer.setAudioStreamType(STREAM_MUSIC);
 					try {
@@ -58,7 +63,6 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 					mediaPlayer.setOnErrorListener(this);
 					mediaPlayer.setOnPreparedListener(this);
 					mediaPlayer.prepareAsync();
-					wifiLock = ((WifiManager) getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL, WIFI_LOCK);
 					wifiLock.acquire();
 				} else {
 					// TODO
@@ -66,7 +70,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 			} else if (intent.getAction().equals(ACTION_STOP)) {
 				mNotificationManager.cancel(NOTIFICATION_ID);
 				am.abandonAudioFocus(this);
-				wifiLock.release();
+				releaseWifiLock();
 				mediaPlayer.reset();
 				LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(ACTION_STOPPED));
 			}
@@ -92,7 +96,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 						.setSmallIcon(R.drawable.ic_stat_av_play)
 						.setContentTitle(getString(R.string.app_name))
 						.setContentText(getString(R.string.notification_playing))
-						.setDefaults(Notification.FLAG_NO_CLEAR)
+						.setOngoing(true)
 						.addAction(R.drawable.ic_stat_av_stop,
 								getString(R.string.notification_stop_playback),
 								stopPlaybackPendingIntent);
@@ -101,20 +105,22 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 		stackBuilder.addNextIntent(new Intent(this, MyActivity_.class));
 		PendingIntent openApplicationPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 		mBuilder.setContentIntent(openApplicationPendingIntent);
-		return mBuilder.build();
+		Notification notification = mBuilder.build();
+		notification.defaults |= Notification.FLAG_NO_CLEAR;
+		return notification;
 	}
 
 	@Override
 	public void onDestroy() {
 		if (mediaPlayer != null) mediaPlayer.release();
-		wifiLock.release();
+		releaseWifiLock();
 		mNotificationManager.cancel(NOTIFICATION_ID);
 		LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(ACTION_STOPPED));
 	}
 
 	@Override
 	public boolean onError(MediaPlayer mp, int what, int extra) {
-		wifiLock.release();
+		releaseWifiLock();
 		mNotificationManager.cancel(NOTIFICATION_ID);
 		mp.reset();
 		LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(ACTION_STOPPED_ERROR));
@@ -124,12 +130,17 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 	@Override
 	public void onAudioFocusChange(int focusChange) {
 		if (focusChange == AUDIOFOCUS_LOSS) {
-			wifiLock.release();
+			releaseWifiLock();
 			mediaPlayer.reset();
 			mNotificationManager.cancel(NOTIFICATION_ID);
+			LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(ACTION_STOPPED));
 		} else if (focusChange == AUDIOFOCUS_GAIN) {
 			mediaPlayer.prepareAsync();
 			mNotificationManager.cancel(NOTIFICATION_ID);
 		}
+	}
+
+	private void releaseWifiLock() {
+		if (wifiLock.isHeld()) wifiLock.release();
 	}
 }
