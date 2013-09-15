@@ -8,4 +8,6 @@
     <string name="connection_error">Feil! Klarte ikke å koble til Internett.</string>
     <string name="parse_error">Feil ved innlesing av nyheter.</string>
     <string name="error_retrieving_news">Klarte ikke å hente nyheter</string>
+    <string name="get_started">KJØR</string>
+    <string name="app_id">1413999512148801</string>
 </resources>

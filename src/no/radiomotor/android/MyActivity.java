@@ -1,19 +1,33 @@
 package no.radiomotor.android;
 
 import android.app.Activity;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.*;
-import com.googlecode.androidannotations.annotations.*;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.googlecode.androidannotations.annotations.AfterViews;
+import com.googlecode.androidannotations.annotations.Background;
+import com.googlecode.androidannotations.annotations.EActivity;
+import com.googlecode.androidannotations.annotations.ItemClick;
+import com.googlecode.androidannotations.annotations.OnActivityResult;
+import com.googlecode.androidannotations.annotations.OptionsItem;
+import com.googlecode.androidannotations.annotations.OptionsMenu;
+import com.googlecode.androidannotations.annotations.UiThread;
+import com.googlecode.androidannotations.annotations.ViewById;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -23,8 +37,6 @@ import java.util.ArrayList;
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static no.radiomotor.android.RadiomotorXmlParser.Item;
 
-import java.io.File;
-
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main)
 public class MyActivity extends Activity {
@@ -32,9 +44,8 @@ public class MyActivity extends Activity {
 	@ViewById ListView newsFeedList;
 	@ViewById TextView noNewsTextView;
 
-	private final int PICTURE_REQUEST_CODE = 1;
-	private final String IMAGE_PATH = Environment.getExternalStorageDirectory()+File.separator + "radiomotor.jpg";
-
+    private final String IMAGE_PATH = Environment.getExternalStorageDirectory()+File.separator + "radiomotor.jpg";
+    private final int PICTURE_REQUEST_CODE = 1;
 	private CacheHelper cacheHelper;
 
 	MenuItem refresh;
@@ -75,14 +86,13 @@ public class MyActivity extends Activity {
     @OnActivityResult(PICTURE_REQUEST_CODE)
     void onResult(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
+            Fragment prev = getFragmentManager().findFragmentByTag("image");
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            if (prev != null) {
+                ft.remove(prev);
+            }
             ImageFragment imageFragment = new ImageFragment();
-            getFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, imageFragment).commit();
-            getFragmentManager().executePendingTransactions();
-
-            ImageView imageView = (ImageView) findViewById(R.id.imageView);
-            imageView.setImageURI(Uri.parse(IMAGE_PATH));
-            imageView.invalidate();
+            imageFragment.show(ft, "image");
         }
     }
 
@@ -151,5 +161,4 @@ public class MyActivity extends Activity {
 		conn.connect();
 		return conn.getInputStream();
 	}
-
 }
