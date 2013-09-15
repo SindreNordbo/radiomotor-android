@@ -130,6 +130,7 @@ public class MyActivity extends Activity {
 	private void changeRadioStatus(boolean playing) {
 		radioControl.setActionView(null);
 		radioControl.setIcon(playing ? R.drawable.ic_action_av_stop : R.drawable.ic_action_av_play);
+		radioControl.setTitle(playing ? R.string.action_stop : R.string.action_play);
 		SharedPreferencesHelper.get(this).putBoolean(IS_RADIO_PLAYING_KEY, playing);
 		isRadioPlaying = playing;
 	}
