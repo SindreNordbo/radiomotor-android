@@ -2,12 +2,8 @@ package no.radiomotor.android;
 
 import android.content.Context;
 import android.os.Parcel;
-import android.util.Log;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 
 import static no.radiomotor.android.RadiomotorXmlParser.Item;
@@ -30,7 +26,12 @@ public class CacheHelper {
 	}
 
 	ArrayList<Item> readNewsItems() throws IOException {
-		FileInputStream fin = new FileInputStream(cacheFile);
+		FileInputStream fin = null;
+		try {
+			fin = new FileInputStream(cacheFile);
+		} catch (FileNotFoundException e) {
+			return new ArrayList<Item>();
+		}
 		byte[] data = new byte[(int) cacheFile.length()];
 		fin.read(data);
 

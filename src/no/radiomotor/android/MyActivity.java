@@ -1,9 +1,16 @@
 package no.radiomotor.android;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
-import android.content.Intent;
+import android.content.*;
+import android.media.AudioManager;
+import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.*;
+import com.googlecode.androidannotations.annotations.*;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -35,11 +42,14 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static android.widget.Toast.LENGTH_LONG;
+import static no.radiomotor.android.RadioService.*;
 import static no.radiomotor.android.RadiomotorXmlParser.Item;
 
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main)
 public class MyActivity extends Activity {
+	private static final String IS_RADIO_PLAYING_KEY = "isRadioPlaying";
 
 	@ViewById ListView newsFeedList;
 	@ViewById TextView noNewsTextView;
@@ -48,13 +58,28 @@ public class MyActivity extends Activity {
     private final int PICTURE_REQUEST_CODE = 1;
 	private CacheHelper cacheHelper;
 
+	boolean isRadioPlaying;
+
 	MenuItem refresh;
+	MenuItem radioControl;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		isRadioPlaying = SharedPreferencesHelper.get(this).getBoolean(IS_RADIO_PLAYING_KEY, false);
+	}
 
 	@AfterViews
 	void getRss() {
 		cacheHelper = new CacheHelper(getApplicationContext());
 		updateListview();
 		downloadNewsfeed("http://www.radiomotor.no/feed/");
+
+		LocalBroadcastManager bManager = LocalBroadcastManager.getInstance(this);
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(ACTION_STARTED);
+		intentFilter.addAction(ACTION_STOPPED);
+		bManager.registerReceiver(broadcastReceiver, intentFilter);
 	}
 
     @OptionsItem(R.id.action_picture)
@@ -69,6 +94,13 @@ public class MyActivity extends Activity {
 
     @OptionsItem(R.id.action_play)
     public void radioPlayerSelected() {
+		Intent i = new Intent(getApplicationContext(), RadioService.class);
+		i.setAction(isRadioPlaying ? ACTION_STOP : ACTION_PLAY);
+		if (!isRadioPlaying) {
+			radioControl.setActionView(R.layout.actionbar_indeterminate_progress);
+		}
+		setVolumeControlStream(AudioManager.STREAM_MUSIC);
+		startService(i);
     }
 
 	@OptionsItem(R.id.action_refresh)
@@ -80,7 +112,30 @@ public class MyActivity extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(final Menu menu) {
 		refresh = menu.findItem(R.id.action_refresh);
+		radioControl = menu.findItem(R.id.action_play);
+		changeRadioStatus(isRadioPlaying);
 		return true;
+	}
+
+	private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals(RadioService.ACTION_STARTED)) {
+				changeRadioStatus(true);
+			} else if (intent.getAction().equals(ACTION_STOPPED)) {
+				changeRadioStatus(false);
+			} else if (intent.getAction().equals(ACTION_STOPPED_ERROR)) {
+				Toast.makeText(getApplicationContext(), getString(R.string.playback_error), LENGTH_LONG).show();
+				changeRadioStatus(false);
+			}
+		}
+	};
+
+	private void changeRadioStatus(boolean playing) {
+		radioControl.setActionView(null);
+		radioControl.setIcon(playing ? R.drawable.ic_action_av_stop : R.drawable.ic_action_av_play);
+		SharedPreferencesHelper.get(this).putBoolean(IS_RADIO_PLAYING_KEY, playing);
+		isRadioPlaying = playing;
 	}
 
     @OnActivityResult(PICTURE_REQUEST_CODE)
@@ -142,7 +197,7 @@ public class MyActivity extends Activity {
 
 	@UiThread
 	void errorMessage(int resourceId) {
-		Toast.makeText(getApplicationContext(), resourceId, Toast.LENGTH_LONG).show();
+		Toast.makeText(getApplicationContext(), resourceId, LENGTH_LONG).show();
 	}
 
 	@ItemClick
