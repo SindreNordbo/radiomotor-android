@@ -1,6 +1,8 @@
 package no.radiomotor.android;
 
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.*;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -9,15 +11,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.*;
-import com.googlecode.androidannotations.annotations.*;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,7 +45,7 @@ import static no.radiomotor.android.RadiomotorXmlParser.Item;
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main)
 public class MyActivity extends Activity {
-	private static final String IS_RADIO_PLAYING_KEY = "isRadioPlaying";
+	public static final String IS_RADIO_PLAYING_KEY = "isRadioPlaying";
 
 	@ViewById ListView newsFeedList;
 	@ViewById TextView noNewsTextView;
@@ -72,13 +68,13 @@ public class MyActivity extends Activity {
 	@AfterViews
 	void getRss() {
 		cacheHelper = new CacheHelper(getApplicationContext());
-		updateListview();
 		downloadNewsfeed("http://www.radiomotor.no/feed/");
 
 		LocalBroadcastManager bManager = LocalBroadcastManager.getInstance(this);
 		IntentFilter intentFilter = new IntentFilter();
 		intentFilter.addAction(ACTION_STARTED);
 		intentFilter.addAction(ACTION_STOPPED);
+		intentFilter.addAction(ACTION_STOPPED_ERROR);
 		bManager.registerReceiver(broadcastReceiver, intentFilter);
 	}
 
@@ -134,6 +130,7 @@ public class MyActivity extends Activity {
 	private void changeRadioStatus(boolean playing) {
 		radioControl.setActionView(null);
 		radioControl.setIcon(playing ? R.drawable.ic_action_av_stop : R.drawable.ic_action_av_play);
+		radioControl.setTitle(playing ? R.string.action_stop : R.string.action_play);
 		SharedPreferencesHelper.get(this).putBoolean(IS_RADIO_PLAYING_KEY, playing);
 		isRadioPlaying = playing;
 	}

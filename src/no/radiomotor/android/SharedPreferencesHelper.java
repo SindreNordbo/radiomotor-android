@@ -18,14 +18,14 @@ public class SharedPreferencesHelper {
 		return new SharedPreferencesHelper(context);
 	}
 
-	public static void putBoolean(String key, boolean value) {
+	public void putBoolean(String key, boolean value) {
 		SharedPreferences settings = ctx.getSharedPreferences(PREFS_FILE, MODE_PRIVATE);
 		SharedPreferences.Editor editor = settings.edit();
 		editor.putBoolean(key, value);
 		editor.commit();
 	}
 
-	public static boolean getBoolean(String key, boolean defValue) {
+	public boolean getBoolean(String key, boolean defValue) {
 		SharedPreferences settings = ctx.getSharedPreferences(PREFS_FILE, MODE_PRIVATE);
 		return settings.getBoolean(key, defValue);
 	}
