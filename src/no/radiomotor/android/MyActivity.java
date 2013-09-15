@@ -49,7 +49,7 @@ import static no.radiomotor.android.RadiomotorXmlParser.Item;
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main)
 public class MyActivity extends Activity {
-	private static final String IS_RADIO_PLAYING_KEY = "isRadioPlaying";
+	public static final String IS_RADIO_PLAYING_KEY = "isRadioPlaying";
 
 	@ViewById ListView newsFeedList;
 	@ViewById TextView noNewsTextView;
@@ -79,6 +79,7 @@ public class MyActivity extends Activity {
 		IntentFilter intentFilter = new IntentFilter();
 		intentFilter.addAction(ACTION_STARTED);
 		intentFilter.addAction(ACTION_STOPPED);
+		intentFilter.addAction(ACTION_STOPPED_ERROR);
 		bManager.registerReceiver(broadcastReceiver, intentFilter);
 	}
 

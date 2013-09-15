@@ -68,10 +68,11 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 					// TODO
 				}
 			} else if (intent.getAction().equals(ACTION_STOP)) {
-				mNotificationManager.cancel(NOTIFICATION_ID);
 				am.abandonAudioFocus(this);
 				releaseWifiLock();
 				mediaPlayer.reset();
+				stopForeground(true);
+				SharedPreferencesHelper.get(this).putBoolean(MyActivity.IS_RADIO_PLAYING_KEY, false);
 				LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(ACTION_STOPPED));
 			}
 		}
@@ -81,8 +82,8 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 
 	@Override
 	public void onPrepared(MediaPlayer mp) {
+		startForeground(NOTIFICATION_ID, createNotification());
 		mediaPlayer.start();
-		mNotificationManager.notify(NOTIFICATION_ID, createNotification());
 		LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(ACTION_STARTED));
 	}
 
@@ -112,17 +113,21 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 
 	@Override
 	public void onDestroy() {
-		if (mediaPlayer != null) mediaPlayer.release();
+		am.abandonAudioFocus(this);
 		releaseWifiLock();
-		mNotificationManager.cancel(NOTIFICATION_ID);
+		if (mediaPlayer != null) mediaPlayer.release();
+		stopForeground(true);
+		SharedPreferencesHelper.get(this).putBoolean(MyActivity.IS_RADIO_PLAYING_KEY, false);
 		LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(ACTION_STOPPED));
 	}
 
 	@Override
 	public boolean onError(MediaPlayer mp, int what, int extra) {
+		am.abandonAudioFocus(this);
 		releaseWifiLock();
-		mNotificationManager.cancel(NOTIFICATION_ID);
 		mp.reset();
+		stopForeground(true);
+		SharedPreferencesHelper.get(this).putBoolean(MyActivity.IS_RADIO_PLAYING_KEY, false);
 		LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(ACTION_STOPPED_ERROR));
 		return true;
 	}
@@ -132,11 +137,11 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 		if (focusChange == AUDIOFOCUS_LOSS) {
 			releaseWifiLock();
 			mediaPlayer.reset();
-			mNotificationManager.cancel(NOTIFICATION_ID);
+			stopForeground(true);
+			SharedPreferencesHelper.get(this).putBoolean(MyActivity.IS_RADIO_PLAYING_KEY, false);
 			LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(ACTION_STOPPED));
 		} else if (focusChange == AUDIOFOCUS_GAIN) {
 			mediaPlayer.prepareAsync();
-			mNotificationManager.cancel(NOTIFICATION_ID);
 		}
 	}
 
