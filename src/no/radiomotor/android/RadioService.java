@@ -141,6 +141,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 			SharedPreferencesHelper.get(this).putBoolean(MyActivity.IS_RADIO_PLAYING_KEY, false);
 			LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(ACTION_STOPPED));
 		} else if (focusChange == AUDIOFOCUS_GAIN) {
+			mediaPlayer.reset();
 			mediaPlayer.prepareAsync();
 		}
 	}
