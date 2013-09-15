@@ -68,7 +68,6 @@ public class MyActivity extends Activity {
 	@AfterViews
 	void getRss() {
 		cacheHelper = new CacheHelper(getApplicationContext());
-		updateListview();
 		downloadNewsfeed("http://www.radiomotor.no/feed/");
 
 		LocalBroadcastManager bManager = LocalBroadcastManager.getInstance(this);
