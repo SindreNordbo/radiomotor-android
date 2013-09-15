@@ -46,7 +46,7 @@ public class MyActivity extends Activity {
 	boolean isRadioPlaying;
 
 	MenuItem refresh;
-	MenuItem podcastControl;
+	MenuItem radioControl;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +81,9 @@ public class MyActivity extends Activity {
     public void radioPlayerSelected() {
 		Intent i = new Intent(getApplicationContext(), RadioService.class);
 		i.setAction(isRadioPlaying ? ACTION_STOP : ACTION_PLAY);
+		if (!isRadioPlaying) {
+			radioControl.setActionView(R.layout.actionbar_indeterminate_progress);
+		}
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		startService(i);
     }
@@ -94,7 +97,7 @@ public class MyActivity extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(final Menu menu) {
 		refresh = menu.findItem(R.id.action_refresh);
-		podcastControl = menu.findItem(R.id.action_play);
+		radioControl = menu.findItem(R.id.action_play);
 		changeRadioStatus(isRadioPlaying);
 		return true;
 	}
@@ -114,7 +117,8 @@ public class MyActivity extends Activity {
 	};
 
 	private void changeRadioStatus(boolean playing) {
-		podcastControl.setIcon(playing ? R.drawable.ic_action_av_stop : R.drawable.ic_action_av_play);
+		radioControl.setActionView(null);
+		radioControl.setIcon(playing ? R.drawable.ic_action_av_stop : R.drawable.ic_action_av_play);
 		SharedPreferencesHelper.get(this).putBoolean(IS_RADIO_PLAYING_KEY, playing);
 		isRadioPlaying = playing;
 	}

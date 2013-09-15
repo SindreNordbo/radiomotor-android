@@ -63,8 +63,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 				} else {
 					// TODO
 				}
-			}
-			else if (intent.getAction().equals(ACTION_STOP)) {
+			} else if (intent.getAction().equals(ACTION_STOP)) {
 				mNotificationManager.cancel(NOTIFICATION_ID);
 				am.abandonAudioFocus(this);
 				wifiLock.release();
@@ -84,17 +83,24 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 	}
 
 	private Notification createNotification() {
+		Intent stopPlaybackIntent = new Intent(this, RadioService.class);
+		stopPlaybackIntent.setAction(ACTION_STOP);
+		PendingIntent stopPlaybackPendingIntent = PendingIntent.getService(this, 0, stopPlaybackIntent, 0);
+
 		NotificationCompat.Builder mBuilder =
 				new NotificationCompat.Builder(this)
 						.setSmallIcon(R.drawable.ic_stat_av_play)
 						.setContentTitle(getString(R.string.app_name))
-						.setContentText(getString(R.string.notification_playing));
-		Intent resultIntent = new Intent(this, MyActivity_.class);
+						.setContentText(getString(R.string.notification_playing))
+						.setDefaults(Notification.FLAG_NO_CLEAR)
+						.addAction(R.drawable.ic_stat_av_stop,
+								getString(R.string.notification_stop_playback),
+								stopPlaybackPendingIntent);
 		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
 		stackBuilder.addParentStack(MyActivity_.class);
-		stackBuilder.addNextIntent(resultIntent);
-		PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-		mBuilder.setContentIntent(resultPendingIntent);
+		stackBuilder.addNextIntent(new Intent(this, MyActivity_.class));
+		PendingIntent openApplicationPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+		mBuilder.setContentIntent(openApplicationPendingIntent);
 		return mBuilder.build();
 	}
 
