@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import java.io.File;
@@ -14,6 +15,7 @@ import java.io.File;
 public class ImageFragment extends DialogFragment {
     private final String IMAGE_PATH = Environment.getExternalStorageDirectory()+ File.separator + "radiomotor.jpg";
     ImageView imageView;
+    ImageButton uploadButton;
 
     public ImageFragment() {
     }
@@ -22,8 +24,7 @@ public class ImageFragment extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.image_fragment, container, false);
-        getDialog().setTitle("Hva vil du gjøre med bildet?");
-        setStyle(DialogFragment.STYLE_NO_FRAME, 0);
+        uploadButton = (ImageButton) view.findViewById(R.id.uploadButton);
         imageView = (ImageView) view.findViewById(R.id.imageView);
         imageView.setImageURI(Uri.parse(IMAGE_PATH));
         imageView.invalidate();
