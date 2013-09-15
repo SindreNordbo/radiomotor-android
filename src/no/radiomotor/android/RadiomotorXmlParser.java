@@ -69,7 +69,7 @@ public class RadiomotorXmlParser {
 		}
 	}
 
-	public Item readItem(XmlPullParser parser) throws IOException, XmlPullParserException {
+	Item readItem(XmlPullParser parser) throws IOException, XmlPullParserException {
 		parser.require(XmlPullParser.START_TAG, ns, "item");
 		String title = null;
 		String link = null;

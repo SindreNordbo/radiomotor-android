@@ -7,8 +7,8 @@ import static android.content.Context.MODE_PRIVATE;
 
 public class SharedPreferencesHelper {
 
-	public static Context ctx;
-	private static final String PREFS_FILE = "radiomotorPrefs";
+	private Context ctx;
+	private final String PREFS_FILE = "radiomotorPrefs";
 
 	private SharedPreferencesHelper(Context context) {
 		ctx = context;

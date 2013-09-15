@@ -9,24 +9,24 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import static no.radiomotor.android.RadiomotorXmlParser.Item;
+
 public class NewsFeedAdapter extends ArrayAdapter {
 
 	private final int resource;
 	private final LayoutInflater inflater;
-	private final Context context;
 
-	public NewsFeedAdapter(final Context ctx, final int resourceId, final List<RadiomotorXmlParser.Item> objects) {
+	public NewsFeedAdapter(final Context ctx, final int resourceId, final List<Item> objects) {
 		super(ctx, resourceId, objects);
 		resource = resourceId;
 		inflater = LayoutInflater.from(ctx);
-		context = ctx;
 	}
 
 	@Override
 	public View getView(final int position, View convertView, final ViewGroup parent) {
 		convertView = inflater.inflate(resource, null);
 
-		RadiomotorXmlParser.Item item = (RadiomotorXmlParser.Item) getItem(position);
+		Item item = (Item) getItem(position);
 
 		TextView itemTitle = (TextView) convertView.findViewById(R.id.itemTitle);
 		itemTitle.setText(item.title);

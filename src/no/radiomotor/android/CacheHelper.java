@@ -10,7 +10,7 @@ import static no.radiomotor.android.RadiomotorXmlParser.Item;
 
 public class CacheHelper {
 
-	File cacheFile;
+	private File cacheFile;
 
 	public CacheHelper(Context ctx) {
 		this.cacheFile = new File(ctx.getFilesDir(), "cache");
@@ -26,7 +26,7 @@ public class CacheHelper {
 	}
 
 	ArrayList<Item> readNewsItems() throws IOException {
-		FileInputStream fin = null;
+		FileInputStream fin;
 		try {
 			fin = new FileInputStream(cacheFile);
 		} catch (FileNotFoundException e) {

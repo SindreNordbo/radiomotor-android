@@ -7,6 +7,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -31,7 +32,6 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 	private MediaPlayer mediaPlayer;
 	private WifiLock wifiLock;
 	private AudioManager am;
-	NotificationManager mNotificationManager;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -42,7 +42,6 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 	public void onCreate() {
 		super.onCreate();
 		am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-		mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		wifiLock = ((WifiManager) getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL, WIFI_LOCK);
 		mediaPlayer = new MediaPlayer();
 	}
@@ -101,10 +100,16 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 						.addAction(R.drawable.ic_stat_av_stop,
 								getString(R.string.notification_stop_playback),
 								stopPlaybackPendingIntent);
-		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-		stackBuilder.addParentStack(MyActivity_.class);
-		stackBuilder.addNextIntent(new Intent(this, MyActivity_.class));
-		PendingIntent openApplicationPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+		PendingIntent openApplicationPendingIntent;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN ) {
+			TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+			stackBuilder.addParentStack(no.radiomotor.android.MyActivity_.class);
+			stackBuilder.addNextIntent(new Intent(this, MyActivity_.class));
+			openApplicationPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+		} else {
+			openApplicationPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
+					new Intent(getApplicationContext(), MyActivity_.class), 0);
+		}
 		mBuilder.setContentIntent(openApplicationPendingIntent);
 		Notification notification = mBuilder.build();
 		notification.defaults |= Notification.FLAG_NO_CLEAR;
