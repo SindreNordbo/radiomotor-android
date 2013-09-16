@@ -24,5 +24,9 @@
             android:gravity="center"
             android:background="@color/background_light"
             android:textColor="@android:color/black"/>
+
+    <FrameLayout android:id="@+id/fragment_container" android:layout_weight="1"
+        android:layout_width="0px"
+        android:layout_height="match_parent" />
 </LinearLayout>
 
