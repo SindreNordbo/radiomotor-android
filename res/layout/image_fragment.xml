@@ -16,27 +16,11 @@
         android:layout_height="fill_parent"
         android:layout_gravity="center">
 
-        <ImageButton
-            android:id="@+id/uploadButton"
+        <com.facebook.widget.LoginButton
+            android:id="@+id/login_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/facelogo"
-            android:background="@android:color/transparent"
-            android:layout_gravity="center"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:layout_marginRight="50dp" />
-
-        <ImageButton
-            android:id="@+id/cancel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@+id/uploadButton"
-            android:background="@android:color/transparent"
-            android:src="@drawable/cancel"
-            android:cropToPadding="false"
-            android:padding="5dp"
-            android:layout_gravity="center" />
+            android:layout_gravity="center_horizontal"/>
     </RelativeLayout>
 
 </LinearLayout>

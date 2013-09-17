@@ -1,6 +1,5 @@
 package no.radiomotor.android;
 
-import android.app.DialogFragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +11,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -22,6 +22,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.UiLifecycleHelper;
 import com.googlecode.androidannotations.annotations.AfterViews;
 import com.googlecode.androidannotations.annotations.Background;
 import com.googlecode.androidannotations.annotations.EActivity;
@@ -65,11 +68,24 @@ public class MyActivity extends FragmentActivity {
     MenuItem refresh;
     MenuItem radioControl;
     private boolean imageReadyForDisplay = false;
+    private boolean isResumed = false;
+
+    private UiLifecycleHelper uiHelper;
+    private Session.StatusCallback callback =
+            new Session.StatusCallback() {
+                @Override
+                public void call(Session session,
+                                 SessionState state, Exception exception) {
+                    onSessionStateChange(session, state, exception);
+                }
+            };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         isRadioPlaying = SharedPreferencesHelper.get(this).getBoolean(IS_RADIO_PLAYING_KEY, false);
+        uiHelper = new UiLifecycleHelper(this, callback);
+        uiHelper.onCreate(savedInstanceState);
     }
 
     @AfterViews
@@ -121,8 +137,15 @@ public class MyActivity extends FragmentActivity {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        isResumed = false;
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
+        isResumed = true;
         if (imageReadyForDisplay) {
             imageReadyForDisplay = false;
             ImageFragment imageFragment = new ImageFragment();
@@ -131,9 +154,20 @@ public class MyActivity extends FragmentActivity {
             if (prev != null) {
                 ft.remove(prev);
             }
-            imageFragment.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
             imageFragment.show(ft, "image");
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        uiHelper.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        uiHelper.onSaveInstanceState(outState);
     }
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -163,6 +197,12 @@ public class MyActivity extends FragmentActivity {
         if (resultCode == RESULT_OK) {
             imageReadyForDisplay = true;
         }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        uiHelper.onActivityResult(requestCode, resultCode, data);
     }
 
     @Background
@@ -229,5 +269,38 @@ public class MyActivity extends FragmentActivity {
         conn.setRequestProperty("Content-Type", "text/plain; charset=utf-8");
         conn.connect();
         return conn.getInputStream();
+    }
+
+    @Override
+    protected void onResumeFragments() {
+        super.onResumeFragments();
+        Session session = Session.getActiveSession();
+        if (session != null && session.isOpened()) {
+            // if the session is already open,
+            // try to show the selection fragment
+        } else {
+            // otherwise present the splash screen
+            // and ask the person to login.
+        }
+    }
+
+    private void onSessionStateChange(Session session, SessionState state, Exception exception) {
+        // Only make changes if the activity is visible
+        if (isResumed) {
+            FragmentManager manager = getSupportFragmentManager();
+            // Get the number of entries in the back stack
+            int backStackSize = manager.getBackStackEntryCount();
+            // Clear the back stack
+            for (int i = 0; i < backStackSize; i++) {
+                manager.popBackStack();
+            }
+            if (state.isOpened()) {
+                // If the session state is open:
+                // Show the authenticated fragment
+            } else if (state.isClosed()) {
+                // If the session state is closed:
+                // Show the login fragment
+            }
+        }
     }
 }
