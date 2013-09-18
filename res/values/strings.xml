@@ -3,7 +3,7 @@
     <string name="app_name">Radiomotor</string>
     <string name="action_play">Hør på radio</string>
     <string name="action_stop">Avslutt radio</string>
-    <string name="action_picture">Ta bilde</string>
+    <string name="action_picture">Last opp bilde til Facebook</string>
     <string name="action_open_browser">Åpne i nettleser</string>
     <string name="action_refresh">Oppdater nyheter</string>
     <string name="connection_error">Feil! Klarte ikke å koble til Internett.</string>
@@ -15,4 +15,11 @@
     <string name="get_started">KJØR</string>
     <string name="app_id">1413999512148801</string>
     <string name="upload">Last opp til vår facebook-side!</string>
+    <string name="upload_success">Bilde lastet opp.</string>
+    <string name="upload_picture_confirmation">Starter opplasting av bilde</string>
+    <string name="upload_notification_title">Laster opp bilde</string>
+    <string name="upload_notification_in_progress_text">Opplasting pågår</string>
+    <string name="upload_notification_done_text">Opplasting av bilde ferdig</string>
+    <string name="upload_notification_error_text">Feil under opplasting av bilde</string>
+    <string name="facebook_login_failed_message">Feil under pålogging, vennligst prøv igjen.</string>
 </resources>

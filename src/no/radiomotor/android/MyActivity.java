@@ -1,20 +1,19 @@
 package no.radiomotor.android;
 
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,9 +21,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.facebook.Session;
-import com.facebook.SessionState;
-import com.facebook.UiLifecycleHelper;
+import com.facebook.FacebookRequestError;
+import com.facebook.Response;
 import com.googlecode.androidannotations.annotations.AfterViews;
 import com.googlecode.androidannotations.annotations.Background;
 import com.googlecode.androidannotations.annotations.EActivity;
@@ -35,6 +33,9 @@ import com.googlecode.androidannotations.annotations.OptionsMenu;
 import com.googlecode.androidannotations.annotations.UiThread;
 import com.googlecode.androidannotations.annotations.ViewById;
 
+import com.menor.easyfacebookconnect.EasyActionListener;
+import com.menor.easyfacebookconnect.EasyLoginListener;
+import com.menor.easyfacebookconnect.ui.EasyFacebookFragmentActivity;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
@@ -46,19 +47,18 @@ import java.util.ArrayList;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static android.widget.Toast.LENGTH_LONG;
-import static no.radiomotor.android.RadioService.ACTION_PLAY;
-import static no.radiomotor.android.RadioService.ACTION_STARTED;
-import static no.radiomotor.android.RadioService.ACTION_STOP;
-import static no.radiomotor.android.RadioService.ACTION_STOPPED;
-import static no.radiomotor.android.RadioService.ACTION_STOPPED_ERROR;
+import static no.radiomotor.android.RadioService.*;
 import static no.radiomotor.android.RadiomotorXmlParser.Item;
 
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main)
-public class MyActivity extends FragmentActivity {
+public class MyActivity extends EasyFacebookFragmentActivity {
     public static final String IS_RADIO_PLAYING_KEY = "isRadioPlaying";
+	private static final String TAG = "SBN";
+	private static final String PAGE_ID = "158209464386457";
+	private static final int NOTIFICATION_ID = 24;
 
-    @ViewById ListView newsFeedList;
+	@ViewById ListView newsFeedList;
     @ViewById TextView noNewsTextView;
 
     private final String IMAGE_PATH = Environment.getExternalStorageDirectory()+File.separator + "radiomotor.jpg";
@@ -67,31 +67,20 @@ public class MyActivity extends FragmentActivity {
     boolean isRadioPlaying;
     MenuItem refresh;
     MenuItem radioControl;
-    private boolean imageReadyForFacebook = false;
-    private boolean isResumed = false;
+	NotificationManager mNotificationManager;
+	private NotificationCompat.Builder notificationBuilder;
 
-    private UiLifecycleHelper uiHelper;
-    private Session.StatusCallback callback =
-            new Session.StatusCallback() {
-                @Override
-                public void call(Session session,
-                                 SessionState state, Exception exception) {
-                    onSessionStateChange(session, state, exception);
-                }
-            };
-
-    @Override
+	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         isRadioPlaying = SharedPreferencesHelper.get(this).getBoolean(IS_RADIO_PLAYING_KEY, false);
-        uiHelper = new UiLifecycleHelper(this, callback);
-        uiHelper.onCreate(savedInstanceState);
-    }
+		mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+	}
 
     @AfterViews
     void getRss() {
         cacheHelper = new CacheHelper(getApplicationContext());
-        downloadNewsfeed("http://www.radiomotor.no/feed/");
+        downloadNewsfeed();
 
         LocalBroadcastManager bManager = LocalBroadcastManager.getInstance(this);
         IntentFilter intentFilter = new IntentFilter();
@@ -125,7 +114,7 @@ public class MyActivity extends FragmentActivity {
     @OptionsItem(R.id.action_refresh)
     public void newsRefreshSelected() {
         refresh.setActionView(R.layout.actionbar_indeterminate_progress);
-        downloadNewsfeed("http://www.radiomotor.no/feed/");
+        downloadNewsfeed();
     }
 
     @Override
@@ -134,40 +123,6 @@ public class MyActivity extends FragmentActivity {
         radioControl = menu.findItem(R.id.action_play);
         changeRadioStatus(isRadioPlaying);
         return true;
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        isResumed = false;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        isResumed = true;
-        if (imageReadyForFacebook) {
-            imageReadyForFacebook = false;
-            FacebookFragment facebookFragment = new FacebookFragment();
-            Fragment prev = getSupportFragmentManager().findFragmentByTag("facebook");
-            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            if (prev != null) {
-                ft.remove(prev);
-            }
-            facebookFragment.show(ft, "facebook");
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        uiHelper.onDestroy();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        uiHelper.onSaveInstanceState(outState);
     }
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -195,18 +150,58 @@ public class MyActivity extends FragmentActivity {
     @OnActivityResult(PICTURE_REQUEST_CODE)
     void onResult(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            imageReadyForFacebook = true;
-        }
+			if (!isConnected()) {
+				connect(new EasyLoginListener() {
+					@Override
+					public void onSuccess(Response response) {
+						uploadPicture();
+					}
+
+					@Override
+					public void onError(FacebookRequestError error) {
+						Toast.makeText(MyActivity.this, getString(R.string.facebook_login_failed_message), Toast.LENGTH_LONG).show();
+					}
+				});
+			} else {
+				uploadPicture();
+			}
+		}
     }
 
-    @Override
+	void uploadPicture() {
+		Toast.makeText(MyActivity.this, getString(R.string.upload_picture_confirmation), Toast.LENGTH_LONG).show();
+		notificationBuilder = new NotificationCompat.Builder(MyActivity.this);
+		notificationBuilder.setContentTitle(getString(R.string.upload_notification_title));
+		notificationBuilder.setContentText(getString(R.string.upload_notification_in_progress_text));
+		notificationBuilder.setSmallIcon(R.drawable.ic_stat_av_play);
+		notificationBuilder.setProgress(0, 0, true);
+		mNotificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+		final Bitmap bitmap = BitmapFactory.decodeFile(IMAGE_PATH);
+		shareImageToPage(PAGE_ID + "/photos", bitmap, new EasyActionListener() {
+			@Override
+			public void onSuccess(Response response) {
+				notificationBuilder.setContentText(getString(R.string.upload_notification_done_text))
+						.setProgress(0, 0, false);
+				mNotificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+			}
+
+			@Override
+			public void onError(FacebookRequestError error, Exception exception) {
+				notificationBuilder.setContentText(getString(R.string.upload_notification_error_text))
+						.setProgress(0, 0, false);
+				mNotificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+			}
+		});
+	}
+
+	@Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        uiHelper.onActivityResult(requestCode, resultCode, data);
     }
 
     @Background
-    void downloadNewsfeed(String urlString) {
+    void downloadNewsfeed() {
+		String urlString = "http://www.radiomotor.no/feed/";
         InputStream stream = null;
         RadiomotorXmlParser parser = new RadiomotorXmlParser();
         ArrayList<Item> entries;
@@ -236,9 +231,7 @@ public class MyActivity extends FragmentActivity {
         ArrayList<Item> items = new ArrayList<Item>();
         try {
             items = cacheHelper.readNewsItems();
-        } catch (IOException e) {
-            Log.e("SBN", e.getLocalizedMessage(), e);
-        }
+        } catch (IOException ignored) { }
 
         if (items.size() > 0) {
             noNewsTextView.setVisibility(View.GONE);
@@ -269,38 +262,5 @@ public class MyActivity extends FragmentActivity {
         conn.setRequestProperty("Content-Type", "text/plain; charset=utf-8");
         conn.connect();
         return conn.getInputStream();
-    }
-
-    @Override
-    protected void onResumeFragments() {
-        super.onResumeFragments();
-        Session session = Session.getActiveSession();
-        if (session != null && session.isOpened()) {
-            // if the session is already open,
-            // try to show the selection fragment
-        } else {
-            // otherwise present the splash screen
-            // and ask the person to login.
-        }
-    }
-
-    private void onSessionStateChange(Session session, SessionState state, Exception exception) {
-        // Only make changes if the activity is visible
-        if (isResumed) {
-            FragmentManager manager = getSupportFragmentManager();
-            // Get the number of entries in the back stack
-            int backStackSize = manager.getBackStackEntryCount();
-            // Clear the back stack
-            for (int i = 0; i < backStackSize; i++) {
-                manager.popBackStack();
-            }
-            if (state.isOpened()) {
-                // If the session state is open:
-                // Show the authenticated fragment
-            } else if (state.isClosed()) {
-                // If the session state is closed:
-                // Show the login fragment
-            }
-        }
     }
 }
