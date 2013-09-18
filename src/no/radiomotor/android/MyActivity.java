@@ -67,7 +67,7 @@ public class MyActivity extends FragmentActivity {
     boolean isRadioPlaying;
     MenuItem refresh;
     MenuItem radioControl;
-    private boolean imageReadyForDisplay = false;
+    private boolean imageReadyForFacebook = false;
     private boolean isResumed = false;
 
     private UiLifecycleHelper uiHelper;
@@ -146,15 +146,15 @@ public class MyActivity extends FragmentActivity {
     public void onResume() {
         super.onResume();
         isResumed = true;
-        if (imageReadyForDisplay) {
-            imageReadyForDisplay = false;
-            ImageFragment imageFragment = new ImageFragment();
-            Fragment prev = getSupportFragmentManager().findFragmentByTag("image");
+        if (imageReadyForFacebook) {
+            imageReadyForFacebook = false;
+            FacebookFragment facebookFragment = new FacebookFragment();
+            Fragment prev = getSupportFragmentManager().findFragmentByTag("facebook");
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             if (prev != null) {
                 ft.remove(prev);
             }
-            imageFragment.show(ft, "image");
+            facebookFragment.show(ft, "facebook");
         }
     }
 
@@ -195,7 +195,7 @@ public class MyActivity extends FragmentActivity {
     @OnActivityResult(PICTURE_REQUEST_CODE)
     void onResult(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            imageReadyForDisplay = true;
+            imageReadyForFacebook = true;
         }
     }
 
