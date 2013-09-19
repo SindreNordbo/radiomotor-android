@@ -22,4 +22,8 @@
     <string name="upload_notification_done_text">Opplasting av bilde ferdig</string>
     <string name="upload_notification_error_text">Feil under opplasting av bilde</string>
     <string name="facebook_login_failed_message">Feil under pålogging, vennligst prøv igjen.</string>
+    <string name="choose_picture_operation">Velg bildeoperasjon</string>
+    <string name="picture_information">Bildet vil bli lastet direkte opp til vår Facebook-side</string>
+    <string name="take_new_photo">Ta nytt bilde</string>
+    <string name="upload_from_gallery">Last opp fra galleri</string>
 </resources>
