@@ -215,7 +215,7 @@ public class MyActivity extends EasyFacebookFragmentActivity {
         notificationBuilder = new NotificationCompat.Builder(MyActivity.this);
         notificationBuilder.setContentTitle(getString(R.string.upload_notification_title));
         notificationBuilder.setContentText(getString(R.string.upload_notification_in_progress_text));
-        notificationBuilder.setSmallIcon(R.drawable.ic_stat_av_play);
+        notificationBuilder.setSmallIcon(R.drawable.ic_stat_radiomotor);
         notificationBuilder.setProgress(0, 0, true);
         mNotificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
         final Bitmap bitmap = BitmapFactory.decodeFile(path);

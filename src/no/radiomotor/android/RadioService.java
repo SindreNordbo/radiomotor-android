@@ -93,7 +93,7 @@ public class RadioService extends Service implements MediaPlayer.OnPreparedListe
 
 		NotificationCompat.Builder mBuilder =
 				new NotificationCompat.Builder(this)
-						.setSmallIcon(R.drawable.ic_stat_av_play)
+						.setSmallIcon(R.drawable.ic_stat_radiomotor)
 						.setContentTitle(getString(R.string.app_name))
 						.setContentText(getString(R.string.notification_playing))
 						.setOngoing(true)
