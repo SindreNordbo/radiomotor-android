@@ -61,7 +61,7 @@ import static no.radiomotor.android.RadiomotorXmlParser.Item;
 @OptionsMenu(R.menu.main)
 public class MyActivity extends EasyFacebookFragmentActivity {
     public static final String IS_RADIO_PLAYING_KEY = "isRadioPlaying";
-    private static final String PAGE_ID = "158209464386457";
+    private static final String PAGE_ID = "radiomotornorge";
     private static final int NOTIFICATION_ID = 24;
     private static final int GALLERY_REQUEST_CODE = 0;
     private final int PICTURE_REQUEST_CODE = 1;
@@ -153,14 +153,16 @@ public class MyActivity extends EasyFacebookFragmentActivity {
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(RadioService.ACTION_STARTED)) {
-                changeRadioStatus(true);
-            } else if (intent.getAction().equals(ACTION_STOPPED)) {
-                changeRadioStatus(false);
-            } else if (intent.getAction().equals(ACTION_STOPPED_ERROR)) {
-                Toast.makeText(getApplicationContext(), getString(R.string.playback_error), LENGTH_LONG).show();
-                changeRadioStatus(false);
-            }
+			if (intent == null || intent.getAction() == null) return;
+
+			if (intent.getAction().equals(RadioService.ACTION_STARTED)) {
+				changeRadioStatus(true);
+			} else if (intent.getAction().equals(ACTION_STOPPED)) {
+				changeRadioStatus(false);
+			} else if (intent.getAction().equals(ACTION_STOPPED_ERROR)) {
+				showToast(R.string.playback_error);
+				changeRadioStatus(false);
+			}
         }
     };
 
@@ -176,16 +178,33 @@ public class MyActivity extends EasyFacebookFragmentActivity {
     void onGalleryResult(int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             Uri selectedImage = data.getData();
-            String[] filePaths = { MediaStore.Images.Media.DATA };
-            Cursor cursor = getContentResolver().query(selectedImage,
-                    filePaths, null, null, null);
-            cursor.moveToFirst();
+			if (selectedImage == null) {
+				showToast(R.string.upload_notification_error_text);
+			} else {
+				String[] filePaths = { MediaStore.Images.Media.DATA };
+				Cursor cursor = getContentResolver().query(selectedImage, filePaths, null, null, null);
+				cursor.moveToFirst();
 
-            int columnIndex = cursor.getColumnIndex(filePaths[0]);
-            String path = cursor.getString(columnIndex);
-            cursor.close();
+				int columnIndex = cursor.getColumnIndex(filePaths[0]);
+				final String path = cursor.getString(columnIndex);
+				cursor.close();
 
-            uploadPicture(path);
+				if (!isConnected()) {
+					connect(new EasyLoginListener() {
+						@Override
+						public void onSuccess(Response response) {
+							uploadPicture(path);
+						}
+
+						@Override
+						public void onError(FacebookRequestError error) {
+							showToast(R.string.facebook_login_failed_message);
+						}
+					});
+				} else {
+					uploadPicture(path);
+				}
+			}
         }
     }
 
@@ -201,7 +220,7 @@ public class MyActivity extends EasyFacebookFragmentActivity {
 
                     @Override
                     public void onError(FacebookRequestError error) {
-                        Toast.makeText(MyActivity.this, getString(R.string.facebook_login_failed_message), Toast.LENGTH_LONG).show();
+						showToast(R.string.facebook_login_failed_message);
                     }
                 });
             } else {
@@ -211,7 +230,7 @@ public class MyActivity extends EasyFacebookFragmentActivity {
     }
 
     void uploadPicture(String path) {
-        Toast.makeText(MyActivity.this, getString(R.string.upload_picture_confirmation), Toast.LENGTH_LONG).show();
+		showToast(R.string.upload_picture_confirmation);
         notificationBuilder = new NotificationCompat.Builder(MyActivity.this);
         notificationBuilder.setContentTitle(getString(R.string.upload_notification_title));
         notificationBuilder.setContentText(getString(R.string.upload_notification_in_progress_text));
@@ -252,14 +271,14 @@ public class MyActivity extends EasyFacebookFragmentActivity {
             entries = parser.parse(stream);
             cacheHelper.writeNewsItems(entries);
         } catch (XmlPullParserException e) {
-            errorMessage(R.string.parse_error);
+            showToast(R.string.parse_error);
         } catch (IOException e) {
-            errorMessage(R.string.connection_error);
+            showToast(R.string.connection_error);
         } finally {
             if (stream != null) {
                 try {
                     stream.close();
-                } catch (IOException e) {}
+                } catch (IOException ignored) {}
             }
         }
         updateListview();
@@ -285,7 +304,7 @@ public class MyActivity extends EasyFacebookFragmentActivity {
     }
 
     @UiThread
-    void errorMessage(int resourceId) {
+    void showToast(int resourceId) {
         Toast.makeText(getApplicationContext(), resourceId, LENGTH_LONG).show();
     }
 
