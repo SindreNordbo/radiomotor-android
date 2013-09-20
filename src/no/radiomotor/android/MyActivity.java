@@ -61,7 +61,6 @@ import static no.radiomotor.android.RadiomotorXmlParser.Item;
 @OptionsMenu(R.menu.main)
 public class MyActivity extends EasyFacebookFragmentActivity {
     public static final String IS_RADIO_PLAYING_KEY = "isRadioPlaying";
-    private static final String TAG = "SBN";
     private static final String PAGE_ID = "158209464386457";
     private static final int NOTIFICATION_ID = 24;
     private static final int GALLERY_REQUEST_CODE = 0;
