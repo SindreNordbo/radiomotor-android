@@ -15,5 +15,6 @@
         android:id="@+id/action_picture"
         android:showAsAction="always"
         android:icon="@drawable/ic_action_device_access_camera"
-        android:title="@string/action_picture"/>
+        android:title="@string/action_picture"
+        android:visible="false"/>
 </menu>
